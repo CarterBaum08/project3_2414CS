@@ -1,0 +1,314 @@
+Q: Why am I not able to define my constructors and methods? Does it have to do with it being a template DT class?
+R: My code would not stop giving me error messages for writing my constructors and functions and I did not
+know what to do.
+
+Output:
+In your code, you wrote:
+template <class DT> 
+NestedBST::NestedBST() {
+
+}
+But it should be:
+template <class DT>
+NestedBST<DT>::NestedBST() {
+
+}
+You missed the <DT> after NestedBST in each definition.
+
+Learned:It was a really simple syntax error which involved putting the <DT> in front of the class name.
+This helps the complier understand that when I define a function that I am refering to the the template 
+class.
+-------------------------------------------------------------------------------------------------
+Q: How should I go about removing the first element in a vector and shifting all of the other elements forward in
+C++?
+R: I am trying to write a recursive call that allows me to shift down a dimension by removing an element
+from the values vector, this way whenever I call values(0) it will always be associated with however many times
+I have called the function:ie how many dimensions deep I am. I am also really unfamilar with vector commands so 
+this is a good start to learning some of the useful commands it can do.
+
+Output:
+You need to pass a new vector that contains all elements except the first one.
+Here’s the idiomatic fix:
+Option 1 — copy and erase
+std::vector<DT> remaining = values;  // make a copy
+remaining.erase(remaining.begin());  // remove first element
+innerTree->insert(key, remaining);   // recurse with the rest
+✅ This works exactly as you intend.
+Yes, it copies the vector, but unless your vectors are huge, it’s perfectly fine.
+Option 2 — construct a subvector (cleaner and faster for small data)
+std::vector<DT> remaining(values.begin() + 1, values.end());
+innerTree->insert(key, remaining);
+This builds a new vector from all elements after the first — no need to call erase() at all.
+⚡ Pro tip
+If your goal is just to “move down one dimension” and the size of values is small (as it usually is for coordinate-like data),
+→ Option 2 is the cleanest and most readable way.
+✅ Final form example
+if (!values.empty()) {
+    // go to the next dimension with all but the first element
+    std::vector<DT> remaining(values.begin() + 1, values.end());
+    innerTree->insert(key, remaining);
+}
+
+Learned:I learned that since the values vector is passed as a const parameter, I cannot change it so instead
+I needed to create a new vector using the elements from the old values vector and pass that into the next
+recursive call to make sure I was in the correct dimension. I also learned that in order to add an element 
+to a vector it is not .add() but .push_back() instead. To access an element, it is vector[element] not 
+vector(element).
+----------------------------------------------------------------------------------------------------
+Q: Is my thought process for the first insert recursive valid based on the class code? I am concerned 
+about my current implementation to update the dimension and checking if the the BST is currently empty.
+
+R: I was struggling to figure out how to update dimension through recursion when the only parameters that
+were being passed through were the key and shortened values vector.
+
+Output:
+Checking for an empty tree
+You have this in insert:
+if(this->innerTree==NULL && this->dimension==nullptr)
+There are two issues here:
+this->dimension is an int, not a pointer, so comparing it to nullptr is incorrect.
+You probably intended to check if the node is “uninitialized”. Usually, you can use a sentinel like -1 for dimension to represent uninitialized nodes.
+Example:
+if (this->innerTree == nullptr && this->dimension == -1)
+this->innerTree == NULL is fine for checking if there is no nested tree yet.
+✅ Fix: Initialize dimension = -1 in your default constructor, then check dimension == -1 instead of nullptr.
+
+Updating the dimension
+You wrote:
+this->dimension = 3 - values.size();
+This seems arbitrary and tied to an example where the total dimensions were 3.
+Generally, the dimension of a node should be the level in the nested tree, not 3 - values.size().
+Example:
+root is dimension 0
+root->innerTree is dimension 1
+etc.
+You can pass dimension recursively or calculate it as dimension + 1 when creating innerTree.
+
+Recursive insertion
+if (this->dimension == -1) { // empty node
+    this->value = values[0];
+    this->dimension = 0; // root node
+    this->keys.push_back(key);
+
+    vector<DT> updatedValues(values.begin() + 1, values.end());
+    if (!updatedValues.empty()) {
+        innerTree = new NestedBST<DT>();
+        innerTree->dimension = this->dimension + 1;
+        innerTree->insert(key, updatedValues); // recurse
+    }
+}
+✅ Notes:
+Only create innerTree if there are remaining values.
+dimension increments naturally as you descend.
+The recursion works regardless of dimension once the node has been initialized.
+
+Learned: The AI suggested I make the dimension -1 in the default constructor to illustrate that the dimension
+has not been created yet instead of making it NULL. It also explained that I needed to think of a different 
+approach when dealing with tracking my current dimension. Finally, it helped me understand that I needed to 
+develop a base case to make sure that the function stops being called with the values vector is empty.
+----------------------------------------------------------------------------------------------------------
+Q: I have added a helper variable called isEmpty that is associated with the default Nested BST constructor.
+Please check if my first insert implementation for the insert function works accordingly. 
+R: I feel like I have solved the issue of tracking my dimensions by adding an extra helper variable to track
+if we are in an empty NestedBST instead of using variables that will change.
+
+Output:
+What works well:
+Empty BST insertion logic
+When isEmpty is true, you correctly:
+Set the value of the current node from values[dimension].
+Push the key into keys.
+Set isEmpty = false.
+This handles the base case of the first insertion properly.
+Nested Tree Handling
+You check dimension < values.size()-1 and recursively create an innerTree for the next dimension, which is correct.
+Dimension tracking
+Incrementing innerTree->dimension = this->dimension + 1 ensures correct dimension assignment.
+⚠️ What is missing or problematic:
+Non-empty BST insertion
+Currently, the else block for non-empty BST is empty.
+You need to handle:
+Left/right traversal: Compare values[dimension] with this->value and go left or right accordingly.
+Value matching: If values[dimension] == this->value, check innerTree:
+If it exists, recursively insert into it.
+If not, create innerTree if more dimensions remain.
+Key duplication: Add key to keys only if it’s not already present.
+Without this, the BST will only ever store the first value in each dimension and cannot handle multiple nodes per dimension.
+Memory and isEmpty consistency
+isEmpty is never updated for nodes created in recursion if the node is non-empty.
+Newly created nodes should initialize isEmpty = true.
+Returning from insert
+return; at the end of the else block does nothing and does not implement the recursive insertion logic.
+
+
+Learned: The AI seems to be content with my structure of code. It reminded me that I needed to return after
+the values vector had been fully traversed to avoid errors through recursion. It also reminded me I needed to
+handle the cases of if the values are not new.
+-------------------------------------------------------------------------------------------------
+Q: I have written my implementation for my display method and I want to check it for any bugs.
+R: When I run the input code there is a segmentation fault meaning that I am probably referencing something 
+that does not exist. I have looked over the code and I cannot determine what the cause might be.
+
+Output:
+Major Bugs & Fixes in display()
+1. this == NULL check is never true in C++
+if (this == NULL) return;
+⚠️ This is undefined behavior in C++ — if this were actually NULL, calling a method on it already crashed before entering.
+✅ Fix: You must check child pointers before dereferencing:
+if (this == nullptr) return; // this line is useless; remove it entirely
+and then:
+if (left) left->display(indent);
+...
+if (right) right->display(indent);
+2. Missing nullptr safety before dereferencing children
+Current code calls:
+this->left->display(indent);
+this->right->display(indent);
+💥 If left or right is NULL, this crashes.
+✅ Fix:
+if (left) left->display(indent);
+...
+if (right) right->display(indent);
+3. Indentation logic bug — indent is incremented permanently
+You do:
+indent += 2;
+for (int i = 0; i <= indent; i++) cout << "\t";
+cout << "-> dim " << this->dimension + 1 << endl;
+this->innerTree->display(indent + 2);
+But this modifies indent for subsequent lines, causing runaway indentation.
+✅ Fix: Don’t modify indent permanently — use a temporary variable:
+if (innerTree) {
+    int nextIndent = indent + 2;
+    for (int i = 0; i <= nextIndent; i++) cout << "\t";
+    cout << "-> dim " << dimension + 1 << endl;
+    innerTree->display(nextIndent);
+}
+4. Candidate key count logic: possible empty vector access
+You do:
+if (this->keys.size() == 1)
+    cout << "key=" << this->keys[0] << endl;
+⚠️ If keys is empty, this will segfault.
+✅ Fix:
+if (keys.empty()) {
+    cout << "(no keys)" << endl;
+} else if (keys.size() == 1) {
+    cout << "key=" << keys[0] << endl;
+} else {
+    cout << "(candidates=" << keys.size() << ")" << endl;
+}
+5. Spacing and formatting improvements
+Tabs can look inconsistent across environments.
+You can print indentation more clearly:
+for (int i = 0; i < indent; i++) cout << "  ";
+
+
+Learned: Needed to create a temporary variable for increasing the indent called NextIndent to make sure that I was not changing
+the overall indent variable. I needed to change my first if statement that was checking to see if the object was NULL. Most of my edits
+were data referencing errors or syntax errors.
+-----------------------------------------------------------------------------
+Q:I am confused on where to start and record information for my find() method. Could you explain the steps in pseudo code.
+R: I am struggling to figure out how to implement the printing key and value information aspect of the find method using recursion
+Output:
+1. Path Tracking for Output
+A static vector<DT> path is maintained to record the current path of values as the recursion descends through dimensions.
+Each node updates its slot in the path so that the full tuple (like (10,23,5)) can be printed at the end.
+if (path.size() <= dimension)
+    path.push_back(value);
+else
+    path[dimension] = value;
+
+2. Key Printing at the Final Dimension
+Once the recursion reaches the final dimension (dimension == pattern.size() - 1), all the keys stored at that node are printed.
+The output format matches the problem specification:
+key=101 for (10,23,5)
+for (int k : keys) {
+    cout << "key=" << k << " for (";
+    for (size_t d = 0; d < path.size(); d++) {
+        cout << path[d];
+        if (d < path.size() - 1) cout << ",";
+    }
+    cout << ")" << endl;
+    found = true;
+}
+
+Learned: The AI helped me realize something that I overlooked, creating another tracker that would track the path taken, allowing me to
+print the data correctly when I reached the final dimension. I learned the value in creating temporary lists inside of functions to adding
+in data tracking/storing. I did not use its found key concept because I believed I had a better way to implement it.
+-----------------------------------------------------------------------------
+Q:Could you help me understand why my current implementation to output empty when there are no possible keys for the given pattern does not
+work appropriately?
+R: My current implementation of the find method works execpt for tracking when there are no possible keys
+found for a given pattern.
+
+Output:
+You need a shared flag (e.g., bool found = false) that:
+Is passed down recursively, by reference or pointer.
+Tracks if any match was printed.
+Then at the topmost call, if found is still false, print "EMPTY".
+Example fix:
+template <class DT>
+void NestedBST<DT>::find(const vector<DT>& pattern) {
+    bool found = false;
+    findHelper(pattern, found);  // call recursive helper
+    if (!found)
+        cout << "EMPTY" << endl;
+}
+
+template <class DT>
+void NestedBST<DT>::findHelper(const vector<DT>& pattern, bool& found) {
+    if (this == nullptr) return;
+
+    static vector<DT> path;
+    if (path.size() <= dimension)
+        path.push_back(value);
+    else
+        path[dimension] = value;
+
+    if (pattern[dimension] == -999999) {
+        if (dimension < pattern.size() - 1) {
+            if (left) left->findHelper(pattern, found);
+            if (innerTree) innerTree->findHelper(pattern, found);
+            if (right) right->findHelper(pattern, found);
+        } else {
+            // last pattern card: print key and mark found
+            cout << "key=" << keys[0] << " for (";
+            for (int j = 0; j < path.size(); j++) {
+                cout << path[j];
+                if (j < path.size() - 1) cout << ",";
+            }
+            cout << ")" << endl;
+            found = true;
+
+            if (left) left->findHelper(pattern, found);
+            if (right) right->findHelper(pattern, found);
+        }
+    } else {
+        if (pattern[dimension] < value) {
+            if (left) left->findHelper(pattern, found);
+        } else if (pattern[dimension] > value) {
+            if (right) right->findHelper(pattern, found);
+        } else if (dimension < pattern.size() - 1) {
+            if (innerTree) innerTree->findHelper(pattern, found);
+        } else {
+            // last dimension: print key
+            cout << "key=" << keys[0] << " for (";
+            for (int j = 0; j < path.size(); j++) {
+                cout << path[j];
+                if (j < path.size() - 1) cout << ",";
+            }
+            cout << ")" << endl;
+            found = true;
+        }
+    }
+}
+🧠 Key takeaways
+Never print "EMPTY" in recursive branches; do it once after recursion finishes.
+Use a shared boolean passed by reference to track if any match was found.
+static vector<DT> path should be used carefully — you might want to pass path by reference instead to avoid contamination 
+across multiple top-level calls.
+
+Learned: The AI showed me that I needed to find a way to provide whether keys were found after a full recursive call of the find function.
+Previously I was trying to track whether it there were any possible combinations within the find method. It suggested I make a helper method 
+that passed a boolean value on whether or not a key was found for the pattern. It also showed me how to fix my current wildcard key match if 
+else statements.
+-----------------------------------------------------------------------------

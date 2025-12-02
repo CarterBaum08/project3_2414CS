@@ -1,0 +1,51 @@
+Inserted key=100 for (1,2,3,4)
+Inserted key=200 for (1,2,3,5)
+Inserted key=300 for (2,2,3,4)
+Inserted key=400 for (3,3,3,3)
+Inserted key=500 for (1,3,3,3)
+key=100 for (1,2,3,4)
+key=200 for (1,2,3,5)
+key=500 for (1,3,3,3)
+key=100 for (1,2,3,4)
+key=200 for (1,2,3,5)
+key=300 for (2,2,3,4)
+key=100 for (1,2,3,4)
+key=300 for (2,2,3,4)
+NestedBST Structure:
+[dim 0] value=1  (candidates=3)
+  -> dim 1
+    [dim 1] value=2  (candidates=2)
+      -> dim 2
+        [dim 2] value=3  (candidates=2)
+          -> dim 3
+            [dim 3] value=4  key=100
+            [dim 3] value=5  key=200
+    [dim 1] value=3  (candidates=1)
+      -> dim 2
+        [dim 2] value=3  (candidates=1)
+          -> dim 3
+            [dim 3] value=3  key=500
+[dim 0] value=2  (candidates=1)
+  -> dim 1
+    [dim 1] value=2  (candidates=1)
+      -> dim 2
+        [dim 2] value=3  (candidates=1)
+          -> dim 3
+            [dim 3] value=4  key=300
+[dim 0] value=3  (candidates=1)
+  -> dim 1
+    [dim 1] value=3  (candidates=1)
+      -> dim 2
+        [dim 2] value=3  (candidates=1)
+          -> dim 3
+            [dim 3] value=3  key=400
+
+Unchanged key=100 for (1,2,3,4)
+Updated key=600 for (1,2,3,4)
+key=600 for (1,2,3,4)
+key=200 for (1,2,3,5)
+key=500 for (1,3,3,3)
+key=300 for (2,2,3,4)
+key=400 for (3,3,3,3)
+Updated key=700 for (3,3,3,3)
+key=700 for (3,3,3,3)

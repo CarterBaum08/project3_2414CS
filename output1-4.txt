@@ -1,0 +1,31 @@
+Inserted key=101 for (10,23,5)
+Inserted key=202 for (10,23,7)
+Inserted key=303 for (12,11,4)
+Inserted key=404 for (10,30,1)
+key=101 for (10,23,5)
+key=202 for (10,23,7)
+key=101 for (10,23,5)
+key=303 for (12,11,4)
+NestedBST Structure:
+[dim 0] value=10  (candidates=3)
+  -> dim 1
+    [dim 1] value=23  (candidates=2)
+      -> dim 2
+        [dim 2] value=5  key=101
+        [dim 2] value=7  key=202
+    [dim 1] value=30  (candidates=1)
+      -> dim 2
+        [dim 2] value=1  key=404
+[dim 0] value=12  (candidates=1)
+  -> dim 1
+    [dim 1] value=11  (candidates=1)
+      -> dim 2
+        [dim 2] value=4  key=303
+
+Unchanged key=101 for (10,23,5)
+Updated key=999 for (10,23,5)
+key=999 for (10,23,5)
+key=202 for (10,23,7)
+key=404 for (10,30,1)
+key=303 for (12,11,4)
+EMPTY
